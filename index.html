@@ -47,7 +47,7 @@
     <a-entity camera></a-entity>
   </a-scene>
 
-     <script>
+  <script>
     // --- 1. ЗАПУСК ВИДЕО ---
     function startVideos() {
       document.querySelectorAll('video').forEach(video => {
@@ -64,35 +64,46 @@
     });
 
     // --- 2. ЛОГИКА ВРАЩЕНИЯ ---
+    // Ждем, пока A-Frame полностью инициализирует сцену
     document.querySelector('a-scene').addEventListener('loaded', () => {
       
       const cube = document.getElementById('cube-container');
       let isDragging = false;
       let previousMousePosition = { x: 0, y: 0 };
+
+      // Получаем текущее вращение куба
       let currentRotation = { x: 0, y: 0 };
 
+      // Обработчик нажатия (мышь или палец)
       function onStart(e) {
+        // Игнорируем клики по самой подсказке
         if (e.target.id === 'tap-hint') return;
+        
         isDragging = true;
+        // Берем координаты либо из мыши, либо из касания
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
         previousMousePosition = { x: clientX, y: clientY };
       }
 
+      // Обработчик движения
       function onMove(e) {
         if (!isDragging) return;
-        e.preventDefault();
+        e.preventDefault(); // Останавливаем скролл страницы на телефоне
 
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
+        // Вычисляем, насколько сдвинулся палец/мышь
         const deltaX = clientX - previousMousePosition.x;
         const deltaY = clientY - previousMousePosition.y;
 
-        // ИЗМЕНЕНИЕ ЗДЕСЬ: deltaY теперь вычитается, а не прибавляется
+        // Обновляем углы вращения (скорость 0.5)
         currentRotation.y += deltaX * 0.5;
-        currentRotation.x -= deltaY * 0.5; // <-- Был плюс, стал минус
+        currentRotation.x += deltaY * 0.5;
 
+        // Применяем вращение к контейнеру
         cube.setAttribute('rotation', {
           x: currentRotation.x,
           y: currentRotation.y,
@@ -102,10 +113,12 @@
         previousMousePosition = { x: clientX, y: clientY };
       }
 
+      // Обработчик отпускания
       function onEnd() {
         isDragging = false;
       }
 
+      // Вешаем события на весь экран (window), чтобы AR.js их не блокировал
       window.addEventListener('mousedown', onStart);
       window.addEventListener('mousemove', onMove, { passive: false });
       window.addEventListener('mouseup', onEnd);
