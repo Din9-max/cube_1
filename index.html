@@ -3,43 +3,259 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AR Видео Куб (Вращение)</title>
+  <title>AR Галерея Кубов</title>
+  
+  <!-- Подключаем локальные библиотеки, как у вас -->
   <script src="aframe.min.js"></script>
   <script src="aframe-ar.js"></script>
+  
   <style>
-    body { margin: 0; overflow: hidden; background-color: #000; }
+    body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
+    
+    /* Стили для меню выбора куба */
+    #menu {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9); z-index: 2000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.3s;
+    }
+    #menu h1 { color: white; margin-bottom: 20px; font-size: 24px; text-align: center; }
+    .buttons-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;
+      width: 90%; max-width: 400px;
+    }
+    .btn {
+      padding: 15px; font-size: 18px; font-weight: bold; color: white;
+      background: linear-gradient(135deg, #00e0ff, #7b2cff);
+      border: none; border-radius: 12px; cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,224,255,0.3);
+      transition: transform 0.1s;
+    }
+    .btn:active { transform: scale(0.95); }
+    
+    /* Кнопка "Назад" внутри AR */
+    #back-btn {
+      position: fixed; top: 20px; left: 20px; z-index: 1000;
+      padding: 10px 20px; background: rgba(0,0,0,0.7); color: white;
+      border: 1px solid white; border-radius: 20px; font-size: 16px;
+      display: none; cursor: pointer;
+    }
+    
     #tap-hint {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: rgba(0,0,0,0.8); color: white; padding: 10px 20px;
-      border-radius: 20px; font-family: sans-serif; font-size: 14px;
-      z-index: 1000; pointer-events: none; text-align: center;
+      border-radius: 20px; font-size: 14px; z-index: 1000;
+      pointer-events: none; text-align: center; display: none;
     }
   </style>
 </head>
 <body>
-  <div id="tap-hint">Коснитесь экрана для запуска видео.<br>Зажмите и двигайте палец/мышь, чтобы крутить куб.</div>
 
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+  <!-- МЕНЮ ВЫБОРА -->
+  <div id="menu">
+    <h1>Выберите AR-куб</h1>
+    <div class="buttons-grid" id="buttons-container">
+      <!-- Кнопки будут сгенерированы через JavaScript -->
+    </div>
+  </div>
+
+  <!-- Интерфейс внутри AR -->
+  <button id="back-btn">← В меню</button>
+  <div id="tap-hint">Коснитесь экрана для запуска видео.<br>Крутите куб пальцем.</div>
+
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="antialias: true;">
     
+    <!-- 
+      ВАЖНО: Здесь мы создаем 10 наборов видео. 
+      Вам нужно будет заменить "1.mp4", "2.mp4" и т.д. на ваши реальные файлы.
+      Я сделал по 6 видео для каждого куба, чтобы у каждого были свои грани.
+    -->
     <a-assets>
-      <video id="vid1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
-      <video id="vid2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
-      <video id="vid3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
-      <video id="vid4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
-      <video id="vid5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
-      <video id="vid6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <!-- Куб 1 -->
+      <video id="c1v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c1v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c1v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c1v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c1v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c1v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+
+      <!-- Куб 2 (Замените пути на свои) -->
+      <video id="c2v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c2v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c2v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c2v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c2v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c2v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+
+      <!-- Куб 3 -->
+      <video id="c3v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c3v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c3v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c3v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c3v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c3v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+
+      <!-- Куб 4 -->
+      <video id="c4v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c4v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c4v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c4v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c4v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c4v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+
+      <!-- Куб 5 -->
+      <video id="c5v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c5v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c5v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c5v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c5v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c5v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+
+      <!-- Куб 6 -->
+      <video id="c6v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c6v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c6v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c6v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c6v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c6v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+
+      <!-- Куб 7 -->
+      <video id="c7v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c7v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c7v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c7v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c7v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c7v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+
+      <!-- Куб 8 -->
+      <video id="c8v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c8v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c8v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c8v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c8v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c8v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+
+      <!-- Куб 9 -->
+      <video id="c9v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c9v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c9v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c9v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c9v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c9v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+
+      <!-- Куб 10 -->
+      <video id="c10v1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c10v2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c10v3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c10v4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c10v5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="c10v6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
     </a-assets>
 
-    <a-marker preset="hiro">
+    <!-- 
+      Здесь мы генерируем 10 независимых "сцен" внутри маркера.
+      По умолчанию они все скрыты (visible="false").
+    -->
+    <a-marker preset="hiro" id="main-marker">
       
-      <!-- Контейнер для куба -->
-      <a-entity id="cube-container">
-        <a-video src="#vid1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
-        <a-video src="#vid2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
-        <a-video src="#vid3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
-        <a-video src="#vid4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
-        <a-video src="#vid5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
-        <a-video src="#vid6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      <!-- Куб 1 -->
+      <a-entity id="cube-1" class="cube-group" visible="false">
+        <a-video src="#c1v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c1v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c1v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c1v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c1v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c1v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
+
+      <!-- Куб 2 -->
+      <a-entity id="cube-2" class="cube-group" visible="false">
+        <a-video src="#c2v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c2v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c2v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c2v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c2v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c2v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
+
+      <!-- Куб 3 -->
+      <a-entity id="cube-3" class="cube-group" visible="false">
+        <a-video src="#c3v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c3v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c3v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c3v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c3v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c3v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
+
+      <!-- Куб 4 -->
+      <a-entity id="cube-4" class="cube-group" visible="false">
+        <a-video src="#c4v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c4v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c4v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c4v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c4v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c4v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
+
+      <!-- Куб 5 -->
+      <a-entity id="cube-5" class="cube-group" visible="false">
+        <a-video src="#c5v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c5v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c5v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c5v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c5v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c5v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
+
+      <!-- Куб 6 -->
+      <a-entity id="cube-6" class="cube-group" visible="false">
+        <a-video src="#c6v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c6v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c6v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c6v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c6v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c6v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
+
+      <!-- Куб 7 -->
+      <a-entity id="cube-7" class="cube-group" visible="false">
+        <a-video src="#c7v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c7v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c7v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c7v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c7v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c7v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
+
+      <!-- Куб 8 -->
+      <a-entity id="cube-8" class="cube-group" visible="false">
+        <a-video src="#c8v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c8v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c8v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c8v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c8v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c8v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
+
+      <!-- Куб 9 -->
+      <a-entity id="cube-9" class="cube-group" visible="false">
+        <a-video src="#c9v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c9v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c9v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c9v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c9v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c9v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
+
+      <!-- Куб 10 -->
+      <a-entity id="cube-10" class="cube-group" visible="false">
+        <a-video src="#c10v1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#c10v2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#c10v3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#c10v4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#c10v5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#c10v6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
       </a-entity>
 
     </a-marker>
@@ -47,50 +263,114 @@
     <a-entity camera></a-entity>
   </a-scene>
 
-    <script>
-    // --- 1. ЗАПУСК ВИДЕО ---
+  <script>
+    // --- 1. ГЕНЕРАЦИЯ КНОПОК ---
+    const menu = document.getElementById('menu');
+    const buttonsContainer = document.getElementById('buttons-container');
+    const backBtn = document.getElementById('back-btn');
+    const hint = document.getElementById('tap-hint');
+
+    for (let i = 1; i <= 10; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.innerText = `Куб ${i}`;
+      btn.onclick = () => selectCube(i);
+      buttonsContainer.appendChild(btn);
+    }
+
+    // --- 2. ЛОГИКА ВЫБОРА КУБА ---
+    let activeCubeId = null;
+
+    function selectCube(id) {
+      // Скрываем меню
+      menu.style.opacity = '0';
+      setTimeout(() => menu.style.display = 'none', 300);
+      
+      // Показываем кнопку назад
+      backBtn.style.display = 'block';
+      
+      // Включаем подсказку
+      hint.style.display = 'block';
+
+      // Прячем все кубы
+      document.querySelectorAll('.cube-group').forEach(el => el.setAttribute('visible', 'false'));
+      
+      // Показываем выбранный
+      activeCubeId = `cube-${id}`;
+      document.getElementById(activeCubeId).setAttribute('visible', 'true');
+
+      // Запускаем видео только для выбранного куба
+      startVideos(id);
+    }
+
+    // Возврат в меню
+    backBtn.onclick = () => {
+      menu.style.display = 'flex';
+      setTimeout(() => menu.style.opacity = '1', 10);
+      backBtn.style.display = 'none';
+      hint.style.display = 'none';
+      
+      // Скрываем кубы
+      document.querySelectorAll('.cube-group').forEach(el => el.setAttribute('visible', 'false'));
+      
+      // Ставим все видео на паузу
+      document.querySelectorAll('video').forEach(v => v.pause());
+      activeCubeId = null;
+      videoStarted = false; // Сбрасываем флаг, чтобы при новом выборе видео снова запустились
+    };
+
+    // --- 3. ЗАПУСК ВИДЕО ---
     let videoStarted = false;
-    function startVideos() {
+    function startVideos(cubeId) {
       if (videoStarted) return;
       videoStarted = true;
+      
+      // Ищем видео, которые относятся к выбранному кубу (например, c1v1, c1v2...)
+      const prefix = `c${cubeId}v`;
       document.querySelectorAll('video').forEach(video => {
-        video.play().catch(e => console.log('Видео не запустилось:', e));
+        if (video.id.startsWith(prefix)) {
+          video.play().catch(e => console.log('Видео не запустилось:', e));
+        }
       });
-      document.getElementById('tap-hint').innerText = "Крутите куб пальцем!";
     }
-    document.addEventListener('touchstart', startVideos, { once: true, passive: false });
-    document.addEventListener('mousedown', startVideos, { once: true });
 
-    // --- 2. ЛОГИКА ВРАЩЕНИЯ ---
+    document.addEventListener('touchstart', () => { if (activeCubeId) startVideos(activeCubeId.split('-')[1]); }, { once: true, passive: false });
+    document.addEventListener('mousedown', () => { if (activeCubeId) startVideos(activeCubeId.split('-')[1]); }, { once: true });
+
+
+    // --- 4. ЛОГИКА ВРАЩЕНИЯ (Кватернионы) ---
     document.querySelector('a-scene').addEventListener('loaded', () => {
-      const cube = document.getElementById('cube-container');
-      if (!cube) return;
-
+      
       let isDragging = false;
       let previousPos = { x: 0, y: 0 };
       
-      // Используем кватернионы вместо углов Эйлера, чтобы избежать "застревания"
-      const currentQuat = new THREE.Quaternion();
+      // Объект для хранения вращения каждого куба отдельно
+      const cubeRotations = {};
+      for(let i=1; i<=10; i++) {
+        cubeRotations[`cube-${i}`] = new THREE.Quaternion();
+      }
+
       const tempQuat = new THREE.Quaternion();
 
       function onStart(x, y) {
+        if (!activeCubeId) return; // Если меню открыто, не крутим
         isDragging = true;
         previousPos = { x: x, y: y };
       }
 
       function onMove(x, y, isTouch) {
-        if (!isDragging) return;
+        if (!isDragging || !activeCubeId) return;
 
         const deltaX = x - previousPos.x;
         const deltaY = y - previousPos.y;
-
-        const speed = 0.005; // Скорость вращения
+        const speed = 0.005;
 
         // Инверсия для тача (телефона) и мыши
         const invertX = isTouch ? -1 : 1; 
         const invertY = isTouch ? 1 : -1; 
 
-        // Создаем вращение вокруг глобальных осей
+        const currentQuat = cubeRotations[activeCubeId];
+
         // Вращение по горизонтали (ось Y)
         tempQuat.setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaX * speed * invertX);
         currentQuat.premultiply(tempQuat);
@@ -99,8 +379,11 @@
         tempQuat.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * speed * invertY);
         currentQuat.premultiply(tempQuat);
 
-        // Применяем к кубу
-        cube.object3D.quaternion.copy(currentQuat);
+        // Применяем к активному кубу
+        const cubeEl = document.getElementById(activeCubeId);
+        if (cubeEl && cubeEl.object3D) {
+          cubeEl.object3D.quaternion.copy(currentQuat);
+        }
 
         previousPos = { x: x, y: y };
       }
@@ -109,9 +392,9 @@
         isDragging = false;
       }
 
-      // --- СОБЫТИЯ МЫШИ (ПК) ---
+      // --- СОБЫТИЯ ---
       window.addEventListener('mousedown', (e) => {
-        if (e.target.id === 'tap-hint') return;
+        if (e.target.id === 'tap-hint' || e.target.className === 'btn') return;
         onStart(e.clientX, e.clientY);
       });
       window.addEventListener('mousemove', (e) => {
@@ -120,9 +403,8 @@
       });
       window.addEventListener('mouseup', onEnd);
 
-      // --- СОБЫТИЯ КАСАНИЙ (ТЕЛЕФОН) ---
       window.addEventListener('touchstart', (e) => {
-        if (e.target.id === 'tap-hint') return;
+        if (e.target.id === 'tap-hint' || e.target.className === 'btn') return;
         onStart(e.touches[0].clientX, e.touches[0].clientY);
       }, { passive: false });
       window.addEventListener('touchmove', (e) => {
