@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>AR Видео Куб</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    /* Подсказка для пользователя */
+    #tap-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-family: sans-serif;
+      font-size: 14px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="tap-hint">Коснитесь экрана, чтобы запустить видео</div>
+
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    
+    <a-assets>
+      <!-- muted и playsinline обязательны для автовоспроизведения на мобильных -->
+      <video id="vid1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="vid2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="vid3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="vid4" src="4.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="vid5" src="5.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+      <video id="vid6" src="6.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
+    </a-assets>
+
+    <a-marker preset="hiro">
+      
+      <!-- Используем a-video для каждой грани — это надёжнее, чем a-plane с src -->
+      <!-- Передняя грань -->
+      <a-video src="#vid1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+      
+      <!-- Задняя грань -->
+      <a-video src="#vid2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+      
+      <!-- Правая грань -->
+      <a-video src="#vid3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+      
+      <!-- Левая грань -->
+      <a-video src="#vid4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+      
+      <!-- Верхняя грань -->
+      <a-video src="#vid5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+      
+      <!-- Нижняя грань -->
+      <a-video src="#vid6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    // Запуск видео после взаимодействия пользователя (требование браузеров)
+    function startVideos() {
+      const videos = document.querySelectorAll('video');
+      videos.forEach(video => {
+        video.play().catch(e => {
+          console.log('Видео не запустилось:', e);
+        });
+      });
+      // Скрываем подсказку после первого касания
+      document.getElementById('tap-hint').style.display = 'none';
+    }
+
+    // Запускаем при первом касании/клике
+    document.addEventListener('touchstart', startVideos, { once: true });
+    document.addEventListener('click', startVideos, { once: true });
+
+    // Дополнительно: пытаемся запустить после загрузки сцены
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      // Небольшая задержка, чтобы видео успели загрузить метаданные
+      setTimeout(() => {
+        document.querySelectorAll('video').forEach(v => {
+          v.play().catch(() => {});
+        });
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
