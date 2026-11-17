@@ -4,35 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>AR Видео Куб</title>
+  <title>AR Видео Куб (Вращение)</title>
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
     body { margin: 0; overflow: hidden; }
-    /* Подсказка для пользователя */
     #tap-hint {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-family: sans-serif;
-      font-size: 14px;
-      z-index: 1000;
-      pointer-events: none;
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.7); color: white; padding: 10px 20px;
+      border-radius: 20px; font-family: sans-serif; font-size: 14px;
+      z-index: 1000; pointer-events: none;
     }
   </style>
 </head>
 <body>
-  <div id="tap-hint">Коснитесь экрана, чтобы запустить видео</div>
+  <div id="tap-hint">Коснитесь экрана, чтобы включить видео. Крутите куб пальцем!</div>
 
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" 
+           cursor="rayOrigin: mouse; fuse: false;"
+           raycaster="objects: .draggable">
     
     <a-assets>
-      <!-- muted и playsinline обязательны для автовоспроизведения на мобильных -->
       <video id="vid1" src="1.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
       <video id="vid2" src="2.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
       <video id="vid3" src="3.mp4" loop autoplay muted playsinline crossorigin="anonymous"></video>
@@ -43,24 +35,15 @@
 
     <a-marker preset="hiro">
       
-      <!-- Используем a-video для каждой грани — это надёжнее, чем a-plane с src -->
-      <!-- Передняя грань -->
-      <a-video src="#vid1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
-      
-      <!-- Задняя грань -->
-      <a-video src="#vid2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
-      
-      <!-- Правая грань -->
-      <a-video src="#vid3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
-      
-      <!-- Левая грань -->
-      <a-video src="#vid4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
-      
-      <!-- Верхняя грань -->
-      <a-video src="#vid5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
-      
-      <!-- Нижняя грань -->
-      <a-video src="#vid6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      <!-- Оборачиваем все грани в один контейнер, который и будем крутить -->
+      <a-entity id="cube-container" class="draggable">
+        <a-video src="#vid1" position="0 0 0.5" rotation="0 0 0" width="1" height="1"></a-video>
+        <a-video src="#vid2" position="0 0 -0.5" rotation="0 180 0" width="1" height="1"></a-video>
+        <a-video src="#vid3" position="0.5 0 0" rotation="0 90 0" width="1" height="1"></a-video>
+        <a-video src="#vid4" position="-0.5 0 0" rotation="0 -90 0" width="1" height="1"></a-video>
+        <a-video src="#vid5" position="0 0.5 0" rotation="-90 0 0" width="1" height="1"></a-video>
+        <a-video src="#vid6" position="0 -0.5 0" rotation="90 0 0" width="1" height="1"></a-video>
+      </a-entity>
 
     </a-marker>
 
@@ -68,31 +51,89 @@
   </a-scene>
 
   <script>
-    // Запуск видео после взаимодействия пользователя (требование браузеров)
+    // --- ЗАПУСК ВИДЕО ---
     function startVideos() {
-      const videos = document.querySelectorAll('video');
-      videos.forEach(video => {
-        video.play().catch(e => {
-          console.log('Видео не запустилось:', e);
-        });
+      document.querySelectorAll('video').forEach(video => {
+        video.play().catch(e => console.log('Видео не запустилось:', e));
       });
-      // Скрываем подсказку после первого касания
-      document.getElementById('tap-hint').style.display = 'none';
+      document.getElementById('tap-hint').innerText = "Крутите куб пальцем или мышкой!";
     }
 
-    // Запускаем при первом касании/клике
     document.addEventListener('touchstart', startVideos, { once: true });
-    document.addEventListener('click', startVideos, { once: true });
+    document.addEventListener('mousedown', startVideos, { once: true });
 
-    // Дополнительно: пытаемся запустить после загрузки сцены
     document.querySelector('a-scene').addEventListener('loaded', () => {
-      // Небольшая задержка, чтобы видео успели загрузить метаданные
       setTimeout(() => {
-        document.querySelectorAll('video').forEach(v => {
-          v.play().catch(() => {});
-        });
+        document.querySelectorAll('video').forEach(v => v.play().catch(() => {}));
       }, 1000);
     });
+
+    // --- ЛОГИКА ВРАЩЕНИЯ (Drag and Drop) ---
+    AFRAME.registerComponent('drag-rotate', {
+      schema: { speed: { type: 'number', default: 1.5 } },
+      init: function () {
+        this.ifMouseDown = false;
+        this.x_cord = 0;
+        this.y_cord = 0;
+        
+        // Слушаем события мыши
+        this.el.addEventListener('mousedown', (e) => {
+          this.ifMouseDown = true;
+          this.x_cord = e.clientX;
+          this.y_cord = e.clientY;
+        });
+
+        document.addEventListener('mouseup', () => {
+          this.ifMouseDown = false;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!this.ifMouseDown) return;
+          const dx = e.clientX - this.x_cord;
+          const dy = e.clientY - this.y_cord;
+          this.rotateCube(dx, dy);
+          this.x_cord = e.clientX;
+          this.y_cord = e.clientY;
+        });
+
+        // Слушаем события касаний (для телефонов)
+        this.el.addEventListener('touchstart', (e) => {
+          this.ifMouseDown = true;
+          this.x_cord = e.touches[0].clientX;
+          this.y_cord = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+          this.ifMouseDown = false;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+          if (!this.ifMouseDown) return;
+          e.preventDefault(); // Предотвращаем скролл страницы
+          const dx = e.touches[0].clientX - this.x_cord;
+          const dy = e.touches[0].clientY - this.y_cord;
+          this.rotateCube(dx, dy);
+          this.x_cord = e.touches[0].clientX;
+          this.y_cord = e.touches[0].clientY;
+        }, { passive: false });
+      },
+      
+      rotateCube: function(dx, dy) {
+        // Получаем текущие углы
+        const rot = this.el.getAttribute('rotation');
+        // Изменяем углы (учитываем скорость и инвертируем для естественности)
+        rot.y -= dx * this.data.speed;
+        rot.x -= dy * this.data.speed;
+        // Применяем обратно
+        this.el.setAttribute('rotation', rot);
+      }
+    });
+
+    // Вешаем компонент вращения на наш контейнер
+    const container = document.getElementById('cube-container');
+    if (container) {
+      container.setAttribute('drag-rotate', '');
+    }
   </script>
 </body>
 </html>
