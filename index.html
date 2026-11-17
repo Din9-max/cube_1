@@ -47,57 +47,51 @@
     <a-entity camera></a-entity>
   </a-scene>
 
-    <script>
+     <script>
     // --- 1. ЗАПУСК ВИДЕО ---
-    let videoStarted = false;
     function startVideos() {
-      if (videoStarted) return;
-      videoStarted = true;
       document.querySelectorAll('video').forEach(video => {
         video.play().catch(e => console.log('Видео не запустилось:', e));
       });
-      document.getElementById('tap-hint').innerText = "Крутите куб пальцем!";
     }
-    
-    document.addEventListener('touchstart', startVideos, { once: true, passive: false });
+    document.addEventListener('touchstart', startVideos, { once: true });
     document.addEventListener('mousedown', startVideos, { once: true });
+
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      setTimeout(() => {
+        document.querySelectorAll('video').forEach(v => v.play().catch(() => {}));
+      }, 1000);
+    });
 
     // --- 2. ЛОГИКА ВРАЩЕНИЯ ---
     document.querySelector('a-scene').addEventListener('loaded', () => {
+      
       const cube = document.getElementById('cube-container');
-      if (!cube) {
-        console.error("Куб не найден!");
-        return;
-      }
-
       let isDragging = false;
-      let previousPos = { x: 0, y: 0 };
+      let previousMousePosition = { x: 0, y: 0 };
       let currentRotation = { x: 0, y: 0 };
 
-      // Общая функция начала движения
-      function onStart(x, y) {
+      function onStart(e) {
+        if (e.target.id === 'tap-hint') return;
         isDragging = true;
-        previousPos = { x: x, y: y };
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        previousMousePosition = { x: clientX, y: clientY };
       }
 
-      // Общая функция движения (с настройкой инверсии)
-      function onMove(x, y, isTouch) {
+      function onMove(e) {
         if (!isDragging) return;
+        e.preventDefault();
 
-        const deltaX = x - previousPos.x;
-        const deltaY = y - previousPos.y;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-        // Коэффициент скорости
-        const speed = 0.5;
+        const deltaX = clientX - previousMousePosition.x;
+        const deltaY = clientY - previousMousePosition.y;
 
-        // ЛОГИКА ИНВЕРСИИ:
-        // На десктопе (мышь) ось Y инвертирована (палец вверх = куб вверх)
-        // На мобилках (тач) часто нужно наоборот, поэтому делаем проверку
-        const invertX = isTouch ? 1 : 1; 
-        const invertY = isTouch ? -1 : 1; // Для тача инвертируем Y обратно
-
-        currentRotation.y += deltaX * speed * invertX;
-        currentRotation.x += deltaY * speed * invertY;
+        // ИЗМЕНЕНИЕ ЗДЕСЬ: deltaY теперь вычитается, а не прибавляется
+        currentRotation.y += deltaX * 0.5;
+        currentRotation.x -= deltaY * 0.5; // <-- Был плюс, стал минус
 
         cube.setAttribute('rotation', {
           x: currentRotation.x,
@@ -105,41 +99,19 @@
           z: 0
         });
 
-        previousPos = { x: x, y: y };
+        previousMousePosition = { x: clientX, y: clientY };
       }
 
       function onEnd() {
         isDragging = false;
       }
 
-      // --- СОБЫТИЯ МЫШИ (ПК) ---
-      window.addEventListener('mousedown', (e) => {
-        if (e.target.id === 'tap-hint') return;
-        onStart(e.clientX, e.clientY);
-      });
-
-      window.addEventListener('mousemove', (e) => {
-        if (isDragging) e.preventDefault();
-        onMove(e.clientX, e.clientY, false); // false = это мышь
-      });
-
+      window.addEventListener('mousedown', onStart);
+      window.addEventListener('mousemove', onMove, { passive: false });
       window.addEventListener('mouseup', onEnd);
 
-      // --- СОБЫТИЯ КАСАНИЙ (ТЕЛЕФОН) ---
-      window.addEventListener('touchstart', (e) => {
-        if (e.target.id === 'tap-hint') return;
-        // Берем первый палец
-        onStart(e.touches[0].clientX, e.touches[0].clientY);
-      }, { passive: false });
-
-      window.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        e.preventDefault(); // Останавливаем скролл страницы
-        
-        // Берем первый палец
-        onMove(e.touches[0].clientX, e.touches[0].clientY, true); // true = это тач
-      }, { passive: false });
-
+      window.addEventListener('touchstart', onStart, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
       window.addEventListener('touchend', onEnd);
     });
   </script>
